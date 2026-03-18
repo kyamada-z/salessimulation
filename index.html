@@ -2,64 +2,45 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaaS風 派遣売上シミュレーション</title>
+    <title>派遣売上シミュレーション</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">表示を準備しています...</div>
+
     <script type="text/babel">
-        const { useState, useMemo } = React;
-        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
-        const { Calculator, TrendingUp } = lucide;
+        const { useState } = React;
+        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = Recharts;
 
         function App() {
-            const [params, setParams] = useState({
-                initialUsers: 530,
-                unitPrice: 280000,
-                churnRate: 0.055,
-                newUsersPerMonth: 33,
-                months: 12,
-            });
-
-            const result = useMemo(() => {
-                let monthlyData = [];
-                let currentUsers = params.initialUsers;
-                for (let i = 1; i <= params.months; i++) {
-                    currentUsers = (currentUsers + params.newUsersPerMonth) * (1 - params.churnRate);
-                    monthlyData.push({
-                        month: `${i}ヶ月目`,
-                        users: Math.round(currentUsers),
-                        revenue: Math.round(currentUsers * params.unitPrice)
-                    });
-                }
-                return monthlyData;
-            }, [params]);
+            const [users, setUsers] = useState(530);
+            const data = [
+                { name: '現在', value: users },
+                { name: '1ヶ月後', value: Math.round(users * 0.95 + 30) },
+                { name: '2ヶ月後', value: Math.round((users * 0.95 + 30) * 0.95 + 30) },
+            ];
 
             return (
-                <div className="p-8 max-w-4xl mx-auto">
-                    <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                         売上シミュレーション
-                    </h1>
-                    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <div className="p-10 text-center">
+                    <h1 className="text-2xl font-bold mb-5">売上予測シミュレーター</h1>
+                    <div className="bg-white p-5 shadow-lg rounded-lg border inline-block w-full max-w-md">
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={result}>
+                                <BarChart data={data}>
                                     <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="month" />
+                                    <XAxis dataKey="name" />
                                     <YAxis />
                                     <Tooltip />
-                                    <Bar dataKey="revenue" fill="#3b82f6" name="売上(円)" />
+                                    <Bar dataKey="value" fill="#3b82f6" />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
+                        <p className="mt-4 text-blue-600 font-bold">アプリは正常に動作しています！</p>
                     </div>
-                    <p className="mt-4 text-gray-500 text-sm">※GitHub Pagesの反映には数分かかる場合があります。</p>
                 </div>
             );
         }
