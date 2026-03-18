@@ -2,29 +2,86 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>派遣売上シミュレーション</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
 </head>
-<body class="bg-gray-100 p-10">
-    <div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg border-t-4 border-blue-500">
-        <h1 class="text-2xl font-bold text-gray-800 mb-4">🎉 公開成功！</h1>
-        <p class="text-gray-600 mb-6">
-            GitHub PagesでのWebアプリ公開設定が、正常に完了しました。
-        </p>
-        
-        <div class="bg-blue-50 p-4 rounded-lg mb-6">
-            <p class="text-sm text-blue-800 font-bold">現在のステータス:</p>
-            <p class="text-lg text-blue-600">✅ サーバー連携 OK</p>
-            <p class="text-lg text-blue-600">✅ HTML読み込み OK</p>
-        </div>
+<body class="bg-gray-50">
+    <div id="root"></div>
 
-        <button onclick="alert('動作確認完了！')" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition">
-            ここを押して動作確認
-        </button>
-    </div>
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Line } = Recharts;
 
-    <script>
-        console.log("JavaScriptも正常に動作しています");
+        // 計算ロジック
+        const calculateSimulation = (p) => {
+            let data = [];
+            let users = p.initialUsers;
+            for (let i = 1; i <= p.months; i++) {
+                users = (users + p.newUsers) * (1 - p.churn);
+                data.push({
+                    name: `${i}ヶ月`,
+                    稼働数: Math.round(users),
+                    売上: Math.round(users * p.price)
+                });
+            }
+            return data;
+        };
+
+        function App() {
+            const [p, setP] = useState({ initialUsers: 530, price: 280000, churn: 0.055, newUsers: 33, months: 12 });
+            const data = useMemo(() => calculateSimulation(p), [p]);
+
+            return (
+                <div className="max-w-5xl mx-auto p-4 md:p-10">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
+                        <h1 className="text-2xl font-bold text-gray-800">📊 派遣売上シミュレーション</h1>
+                        <p className="text-gray-500">GitHub Pages 公開版</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 h-fit">
+                            <h2 className="font-bold mb-4 border-b pb-2">条件設定</h2>
+                            <div className="space-y-4">
+                                {[['初期人数', 'initialUsers'], ['単価', 'price'], ['退職率', 'churn'], ['月間新規', 'newUsers']].map(([label, key]) => (
+                                    <div key={key}>
+                                        <label className="block text-xs text-gray-400 mb-1">{label}</label>
+                                        <input type="number" value={key === 'churn' ? p[key]*100 : p[key]} 
+                                            onChange={e => setP({...p, [key]: key === 'churn' ? e.target.value/100 : Number(e.target.value)})}
+                                            className="w-full p-2 bg-gray-50 border rounded-lg text-right font-mono" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-2 space-y-8">
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                                <h2 className="font-bold mb-6">売上推移グラフ</h2>
+                                <div className="h-72 w-full">
+                                    <ResponsiveContainer>
+                                        <ComposedChart data={data}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                            <XAxis dataKey="name" tick={{fontSize: 12}} />
+                                            <YAxis tick={{fontSize: 12}} width={80} />
+                                            <Tooltip />
+                                            <Bar dataKey="売上" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                            <Line type="monotone" dataKey="稼働数" stroke="#ef4444" />
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
