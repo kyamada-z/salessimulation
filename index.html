@@ -5,83 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>派遣売上シミュレーション</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
 </head>
-<body class="bg-gray-50">
-    <div id="root"></div>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
+        <h1 class="text-xl font-bold text-slate-800 mb-6 text-center">📊 派遣売上シミュレーター</h1>
+        
+        <div class="space-y-4 mb-8">
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">現在の稼働数 (人)</label>
+                <input type="number" id="users" value="530" class="w-full p-2 border rounded-lg bg-slate-50 font-mono text-right" oninput="calc()">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">月間退職率 (%)</label>
+                <input type="number" id="churn" value="5.5" step="0.1" class="w-full p-2 border rounded-lg bg-slate-50 font-mono text-right" oninput="calc()">
+            </div>
+        </div>
 
-    <script type="text/babel">
-        const { useState, useMemo } = React;
-        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Line } = Recharts;
+        <div class="bg-blue-600 p-6 rounded-xl text-white text-center shadow-inner">
+            <p class="text-sm opacity-80 mb-1">3ヶ月後の予想稼働数</p>
+            <p class="text-4xl font-black" id="result">---</p>
+        </div>
 
-        // 計算ロジック
-        const calculateSimulation = (p) => {
-            let data = [];
-            let users = p.initialUsers;
-            for (let i = 1; i <= p.months; i++) {
-                users = (users + p.newUsers) * (1 - p.churn);
-                data.push({
-                    name: `${i}ヶ月`,
-                    稼働数: Math.round(users),
-                    売上: Math.round(users * p.price)
-                });
+        <div class="mt-8 text-center">
+            <p class="text-xs text-slate-400">※この画面が表示されていれば、GitHub Pagesの設定は完璧です！</p>
+        </div>
+    </div>
+
+    <script>
+        function calc() {
+            const users = Number(document.getElementById('users').value);
+            const churn = Number(document.getElementById('churn').value) / 100;
+            
+            // 簡易計算（3ヶ月間、新規なしで退職のみ考慮）
+            let current = users;
+            for(let i=0; i<3; i++) {
+                current = current * (1 - churn);
             }
-            return data;
-        };
-
-        function App() {
-            const [p, setP] = useState({ initialUsers: 530, price: 280000, churn: 0.055, newUsers: 33, months: 12 });
-            const data = useMemo(() => calculateSimulation(p), [p]);
-
-            return (
-                <div className="max-w-5xl mx-auto p-4 md:p-10">
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
-                        <h1 className="text-2xl font-bold text-gray-800">📊 派遣売上シミュレーション</h1>
-                        <p className="text-gray-500">GitHub Pages 公開版</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 h-fit">
-                            <h2 className="font-bold mb-4 border-b pb-2">条件設定</h2>
-                            <div className="space-y-4">
-                                {[['初期人数', 'initialUsers'], ['単価', 'price'], ['退職率', 'churn'], ['月間新規', 'newUsers']].map(([label, key]) => (
-                                    <div key={key}>
-                                        <label className="block text-xs text-gray-400 mb-1">{label}</label>
-                                        <input type="number" value={key === 'churn' ? p[key]*100 : p[key]} 
-                                            onChange={e => setP({...p, [key]: key === 'churn' ? e.target.value/100 : Number(e.target.value)})}
-                                            className="w-full p-2 bg-gray-50 border rounded-lg text-right font-mono" />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="lg:col-span-2 space-y-8">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                                <h2 className="font-bold mb-6">売上推移グラフ</h2>
-                                <div className="h-72 w-full">
-                                    <ResponsiveContainer>
-                                        <ComposedChart data={data}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                                            <XAxis dataKey="name" tick={{fontSize: 12}} />
-                                            <YAxis tick={{fontSize: 12}} width={80} />
-                                            <Tooltip />
-                                            <Bar dataKey="売上" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                                            <Line type="monotone" dataKey="稼働数" stroke="#ef4444" />
-                                        </ComposedChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
+            
+            document.getElementById('result').innerText = Math.round(current) + " 人";
         }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        // 起動時に一度実行
+        window.onload = calc;
     </script>
 </body>
 </html>
